@@ -79,9 +79,20 @@ prepare_halium_rootfs()
 
 cleanup()
 {
+	
+	cat <<EOF
+*****************************************
+* 3/3                                   *
+*        Clean-up of host system        *
+*                                       *
+*****************************************
+EOF
+	
+	if [ -d $WORKDIR/mnt-rootfs ]; then
+		umount $WORKDIR/mnt-rootfs || echo "Failed to unmount $WORKDIR/mnt-rootfs. Clean-up will probably fail."
+	fi
 	echo
 	echo "cleaning up"
-	umount $WORKDIR/mnt-rootfs && rm -rf $WORKDIR/mnt-rootfs
 	rm -rf $WORKDIR
 	echo
 }
@@ -163,6 +174,14 @@ ANDROID_DIR="/data"
 
 ### rootfs.img preparation
 
+cat <<EOF
+*****************************************
+* 1/3                                   *
+*       Preparation of rootfs.img       *
+*                                       *
+*****************************************
+EOF
+
 echo -n "preparing rootfs image on host ... "
 prepare_halium_rootfs
 echo "[done]"
@@ -171,11 +190,27 @@ echo -n "unpacking rootfs tarball to rootfs image ... "
 ( cd $WORKDIR/mnt-rootfs && tar zxf $TARPATH )
 echo "[done]"
 
+echo -n "unmounting rootfs image ... "
+sync
+umount $WORKDIR/mnt-rootfs
+rmdir $WORKDIR/mnt-rootfs
+sync
+echo "[done]"
+
 
 ### installation to android device
 
+cat <<EOF
+*****************************************
+* 2/3                                   *
+*     Installation to Android Device    *
+*                                       *
+*****************************************
+EOF
+
 echo -n "adding rootfs image to installation ... "
 adb push $WORKDIR/rootfs.img $ANDROID_DIR/rootfs.img
+echo "[done]"
 
 echo -n "adding android system image to installation ... "
 convert_android_img
